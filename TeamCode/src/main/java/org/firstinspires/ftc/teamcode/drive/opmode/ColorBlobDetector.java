@@ -63,7 +63,6 @@ public class ColorBlobDetector {
      * 
      * @param hardwareMap The hardware map from the OpMode
      * @param telemetry The telemetry object for data output
-     * @param robotHardware The robot hardware reference
      * @param initialColorTarget The initial color to detect (use ColorRange constants)
      * @param cameraHeightInches Height of camera from ground in inches
      * @param cameraForwardOffset Distance forward from robot center in inches
@@ -71,13 +70,12 @@ public class ColorBlobDetector {
      * @param cameraHorizontalFovDegrees Horizontal field of view in degrees
      * @param cameraVerticalFovDegrees Vertical field of view in degrees
      */
-    public ColorBlobDetector(HardwareMap hardwareMap, Telemetry telemetry, RobotHardware robotHardware,
+    public ColorBlobDetector(HardwareMap hardwareMap, Telemetry telemetry,
                             ColorRange initialColorTarget, double cameraHeightInches, 
                             double cameraForwardOffset, double cameraHorizontalOffset,
                             double cameraHorizontalFovDegrees, double cameraVerticalFovDegrees) {
         this.telemetry = telemetry;
         this.hardwareMap = hardwareMap;
-        this.robotHardware = robotHardware;
         this.currentColorTarget = initialColorTarget;
         
         // Store camera calibration values
@@ -97,7 +95,7 @@ public class ColorBlobDetector {
     public ColorBlobDetector(HardwareMap hardwareMap, Telemetry telemetry, RobotHardware robotHardware,
                             double cameraHeightInches, double cameraForwardOffset, double cameraHorizontalOffset,
                             double cameraHorizontalFovDegrees, double cameraVerticalFovDegrees) {
-        this(hardwareMap, telemetry, robotHardware, ColorRange.RED, cameraHeightInches, 
+        this(hardwareMap, telemetry, ColorRange.RED, cameraHeightInches,
              cameraForwardOffset, cameraHorizontalOffset, cameraHorizontalFovDegrees, cameraVerticalFovDegrees);
     }
     
@@ -235,7 +233,7 @@ public class ColorBlobDetector {
         double orientationAngle = calculateOrientationAngle(blob);
         
         // Return distance, angle, height, and orientation
-        return new double[] { distanceFromRobot, angleFromRobot, zFromRobot, orientationAngle };
+        return new double[] { yFromRobot, angleFromRobot, zFromRobot, orientationAngle, xFromRobot, distanceFromRobot };
     }
     
     /**

@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.RobotHardware;
 import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
@@ -17,9 +19,12 @@ import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
  * 3. How to switch between different target colors during operation
  * 4. How to use the measurements for robot guidance and navigation
  */
+@Config
 @TeleOp(name = "Color Blob Demo", group = "Demo")
 public class ColorBlobDemo extends LinearOpMode {
-    
+    private double changeDepth(double depth){
+        return 0.5375 * depth - 9.6823;
+    }
     // Robot hardware
     private RobotHardware robot;
     
@@ -28,27 +33,38 @@ public class ColorBlobDemo extends LinearOpMode {
     
     // Camera position and calibration parameters
     // These values should be measured for your specific robot setup
-    private static final double CAMERA_HEIGHT_INCHES = 6.0;  // Height of camera from ground
-    private static final double CAMERA_FORWARD_OFFSET = 4.0; // Distance forward from robot center
-    private static final double CAMERA_HORIZONTAL_OFFSET = 0.0; // Centered horizontally
-    private static final double CAMERA_HORIZONTAL_FOV_DEGREES = 60.0; // Horizontal field of view
+    private static final double CAMERA_HEIGHT_INCHES = 10.75;  // Height of camera from ground
+    private static final double CAMERA_FORWARD_OFFSET = 0.0; // Distance forward from robot center //8
+    private static final double CAMERA_HORIZONTAL_OFFSET = -11; // Centered horizontally //-5.25
+    private static final double CAMERA_HORIZONTAL_FOV_DEGREES = 48.8; // Horizontal field of view
     private static final double CAMERA_VERTICAL_FOV_DEGREES = 45.0;   // Vertical field of view
-    
+    private static final double ARM_LENGTH = 8;
+    public static double ANGLETOMOVE = 40;
+    public void MoveServo(double angle){
+//        if(angle >= 0){
+//            turretServo.setPosition((ANGLETOMOVE - angle)/180);
+//        }
+//        if(angle < 0) {
+//            turretServo.setPosition((ANGLETOMOVE - angle) / 180);
+//        }
+        turretServo.setPosition((ANGLETOMOVE - angle) / 180);
+    }
+    private Servo turretServo;
     @Override
     public void runOpMode() {
+        turretServo = hardwareMap.get(Servo.class, "TurretServo");
         // Initialize telemetry for user feedback
         telemetry.addData("Status", "Initializing...");
         telemetry.update();
         
         // Initialize robot hardware
-        robot = new RobotHardware(hardwareMap);
-        
+//        robot = new RobotHardware(hardwareMap);
+
         // Initialize color blob detector with camera position parameters
         // This is critical for accurate real-world measurements from the robot's center
         colorDetector = new ColorBlobDetector(
             hardwareMap,
             telemetry,
-            robot,
             ColorBlobDetector.getRedTarget(), // Start with RED detection
             CAMERA_HEIGHT_INCHES,
             CAMERA_FORWARD_OFFSET,
@@ -83,13 +99,19 @@ public class ColorBlobDemo extends LinearOpMode {
                 if (largestBlob != null) {
                     // Calculate real-world measurements
                     double[] measurements = colorDetector.calculateDistanceAndAngle(largestBlob);
-                    double distance = measurements[0]; // Distance from robot center
+                    double distance = changeDepth(measurements[0]); // Distance from robot center
                     double angle = measurements[1];    // Angle from robot's forward direction
                     double height = measurements[2];   // Height from ground
                     double orientation = measurements[3]; // Orientation angle of the rectangle
+                    double horizontalDistance = measurements[4]; // the horizontal distance
+                    double diagnalDistance = measurements[5];
+                    MoveServo(angle);
                     
                     // Display detailed information about the object
                     telemetry.addLine("\n--- Largest Object Details ---");
+                    telemetry.addData("CURRENT SERVO POSITION: ", turretServo.getPosition() * 300);
+                    telemetry.addData("DIAGNAL DISTANCE: ", diagnalDistance);
+                    telemetry.addData("HORIZONTAL DISTANCE: ", horizontalDistance);
                     telemetry.addData("Size", String.format("%.2f sq in", largestBlob.getContourArea() / 100.0));
                     telemetry.addData("Distance from Robot", String.format("%.2f inches", distance));
                     telemetry.addData("Angle from Robot", String.format("%.2f degrees", angle));
