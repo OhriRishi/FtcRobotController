@@ -1,8 +1,13 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
+import android.graphics.drawable.GradientDrawable;
+import android.transition.Slide;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.RobotHardware;
@@ -22,8 +27,45 @@ import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
 @Config
 @TeleOp(name = "Color Blob Demo", group = "Demo")
 public class ColorBlobDemo extends LinearOpMode {
-    private double changeDepth(double depth){
-        return 0.5375 * depth - 9.6823;
+    public Servo WristServo;
+    public static double step = 22.5;
+    private double changeVerticalDepth(double depth){
+        return 0.129 * depth + 6.07;
+    }
+    private double changeHorizontalDepth(double depth){
+        return -0.316*depth + 1.52;
+    }
+    public final double ARMLENGTH = 7;
+    public void MoveSlide(double YOffset, double XOffset) {
+        double NewY = Math.sqrt(ARMLENGTH*ARMLENGTH - XOffset * XOffset);
+        double SlideMove = YOffset - NewY;
+        double turretMovement = Math.toDegrees(Math.atan(XOffset/NewY));
+        SlideMotor.setTargetPosition((int) (SlideMove * TICKSPERINCHES));
+        SlideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        SlideMotor.setVelocity(velocity);
+        telemetry.addData("Moving slide Inches: ", (int) (SlideMove * TICKSPERINCHES));
+        if (!SlideMotor.isBusy()) {
+            turret.setPosition(0.5 - (turretMovement/300));
+            telemetry.addData("Turret Angle: ", turretMovement);
+            telemetry.addData("Turret Position: ", 0.5 - ((turretMovement)/300));
+            telemetry.addData("Current Servo Pos: ", turret.getPosition());
+        }
+        telemetry.update();
+    }
+    private void MoveClawServo(double angleDeg){
+        if (angleDeg >= (45 + step) || angleDeg <= (-45 - step)){
+            WristServo.setPosition(0.5);
+            telemetry.addData("Going to POS", "VERTICAL");
+        } else if (angleDeg < (90 - step) && angleDeg >= step) {
+            WristServo.setPosition(1);
+            telemetry.addData("Going to POS", "RIGHT DIA");
+        } else if (angleDeg <= 22.5 && angleDeg > - 22.5){
+            WristServo.setPosition(0.15);
+            telemetry.addData("Going to POS", "HORIZONTAL");
+        }else {
+            WristServo.setPosition(0);
+            telemetry.addData("Going to POS", "LEFT DIA");
+        }
     }
     // Robot hardware
     private RobotHardware robot;
@@ -39,20 +81,37 @@ public class ColorBlobDemo extends LinearOpMode {
     private static final double CAMERA_HORIZONTAL_FOV_DEGREES = 48.8; // Horizontal field of view
     private static final double CAMERA_VERTICAL_FOV_DEGREES = 45.0;   // Vertical field of view
     private static final double ARM_LENGTH = 8;
-    public static double ANGLETOMOVE = 40;
-    public void MoveServo(double angle){
+    public static double ANGLETOMOVE = 0;
+    public final double TICKSPERINCHES = 538/(1.575*Math.PI); //Total ticks to extend slide divided by slide length
+    public DcMotorEx SlideMotor;
+    public static double velocity = 100;
+    public static double testDepth = 10;
+   // public void MoveServo(double angle){
 //        if(angle >= 0){
 //            turretServo.setPosition((ANGLETOMOVE - angle)/180);
 //        }
 //        if(angle < 0) {
 //            turretServo.setPosition((ANGLETOMOVE - angle) / 180);
 //        }
-        turretServo.setPosition((ANGLETOMOVE - angle) / 180);
-    }
-    private Servo turretServo;
+        //turret.setPosition(0.5);
+//        turretServo.setPosition((ANGLETOMOVE - angle) / 180);
+    //}
+//    public void MoveSlide(double Depth, double angle){
+//        double SlideInches = Depth - (Math.sin(angle) * ARM_LENGTH);
+//        SlideMotor.setTargetPosition((int) (SlideInches * TICKSPERINCHES));
+//        SlideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        SlideMotor.setVelocity(velocity);
+//    }
+    private Servo turret;
     @Override
     public void runOpMode() {
-        turretServo = hardwareMap.get(Servo.class, "TurretServo");
+        WristServo = hardwareMap.get(Servo.class, "WristServo");
+        SlideMotor = hardwareMap.get(DcMotorEx.class, "SlideMotor");
+        SlideMotor.setTargetPosition(0);
+        SlideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        SlideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        SlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turret = hardwareMap.get(Servo.class, "TurretServo");
         // Initialize telemetry for user feedback
         telemetry.addData("Status", "Initializing...");
         telemetry.update();
@@ -99,17 +158,18 @@ public class ColorBlobDemo extends LinearOpMode {
                 if (largestBlob != null) {
                     // Calculate real-world measurements
                     double[] measurements = colorDetector.calculateDistanceAndAngle(largestBlob);
-                    double distance = changeDepth(measurements[0]); // Distance from robot center
+                    double distance = changeVerticalDepth(measurements[0]); // Distance from robot center
                     double angle = measurements[1];    // Angle from robot's forward direction
                     double height = measurements[2];   // Height from ground
                     double orientation = measurements[3]; // Orientation angle of the rectangle
-                    double horizontalDistance = measurements[4]; // the horizontal distance
+                    double horizontalDistance = changeHorizontalDepth(measurements[4]); // the horizontal distance
                     double diagnalDistance = measurements[5];
-                    MoveServo(angle);
-                    
+                    //MoveSlide(distance, horizontalDistance);
+                    MoveClawServo(orientation);
+                    //MoveSlide(testDepth, angle);
                     // Display detailed information about the object
                     telemetry.addLine("\n--- Largest Object Details ---");
-                    telemetry.addData("CURRENT SERVO POSITION: ", turretServo.getPosition() * 300);
+                    telemetry.addData("CURRENT SERVO POSITION: ", turret.getPosition() * 300);
                     telemetry.addData("DIAGNAL DISTANCE: ", diagnalDistance);
                     telemetry.addData("HORIZONTAL DISTANCE: ", horizontalDistance);
                     telemetry.addData("Size", String.format("%.2f sq in", largestBlob.getContourArea() / 100.0));

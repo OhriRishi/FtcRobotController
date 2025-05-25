@@ -15,21 +15,18 @@ import org.slf4j.LoggerFactory;
 @TeleOp
 @Config
 public class servoTest extends LinearOpMode {
-    private static final Logger log = LoggerFactory.getLogger(servoTest.class);
-    public CRServo axon;
-    public static double ServoPosition = 0;
+    //claw close is 0.95 and open is 0.8
+    //public CRServo axon;
 
-    public static double power = 1;
-
-
+    //public static double power = 1;
+    public Servo servo;
+    public static double position = 0;
     @Override
     public void runOpMode() throws InterruptedException {
-        axon = hardwareMap.get(CRServo.class, "axon");
+        servo = hardwareMap.get(Servo.class, "axon");
         waitForStart();
         while(opModeIsActive()){
-
-            axon.setPower(power);
-
+            servo.setPosition(position);
         }
     }
 }
