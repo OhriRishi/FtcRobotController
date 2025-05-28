@@ -13,6 +13,7 @@ import org.firstinspires.ftc.vision.opencv.ColorRange;
 import org.firstinspires.ftc.vision.opencv.ImageRegion;
 
 import org.opencv.core.RotatedRect;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.List;
 
@@ -120,14 +121,12 @@ public class ColorBlobDetector {
         
         // Create the vision portal builder
         VisionPortal.Builder builder = new VisionPortal.Builder();
-        
         // Configure the vision portal with camera settings
         builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1")); // Use the configured webcam
         builder.setCameraResolution(new Size(640, 480)); // Standard resolution (balance of speed vs. detail)
         builder.enableLiveView(true);             // Show camera feed on Driver Station
         builder.setStreamFormat(VisionPortal.StreamFormat.MJPEG); // Compressed format to save bandwidth
         builder.addProcessor(colorProcessor);     // Add our color processor to the vision pipeline
-        
         // Build and initialize the vision portal
         visionPortal = builder.build();
     }

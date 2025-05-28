@@ -72,6 +72,10 @@ import java.util.concurrent.CompletableFuture;
 @TeleOp(name = "Concept: Vision Color-Locator", group = "Concept")
 public class ConceptVisionColorLocatorREALWith2Servos extends LinearOpMode
 {
+    public static double fx = 1430;
+    public static double fy = 1430;
+    public final double cx = 640;
+    public final double cy = 360;
 
     public double angleRad;
     Point startPoint = null;

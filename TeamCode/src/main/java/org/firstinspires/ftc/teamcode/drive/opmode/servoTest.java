@@ -15,7 +15,8 @@ import org.slf4j.LoggerFactory;
 @TeleOp
 @Config
 public class servoTest extends LinearOpMode {
-    //claw close is 0.95 and open is 0.8
+    //claw close is 0.95 and open is 0.8\
+    //5 turn servo 0.35 is to pass to transfer and 0.5 is pickup
     //public CRServo axon;
 
     //public static double power = 1;
