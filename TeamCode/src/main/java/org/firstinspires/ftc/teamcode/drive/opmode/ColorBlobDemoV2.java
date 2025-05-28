@@ -20,12 +20,21 @@ import org.firstinspires.ftc.vision.opencv.ColorRange;
  */
 @TeleOp(name = "Color Blob Demo", group = "Demo")
 public class ColorBlobDemoV2 extends LinearOpMode {
+    public static double fx = 1430;
+    public static double fy = 1430;
+    public final double cx = 320;
+    public final double cy = 240;
+    private static double k1 = -0.0151731;
+    private double k2 = 1.19665;
+    private double k3 = -4.01517;
+    private double p1 = -0.00113377;
+    private double p2 = 0.0015228;
 
     // Robot hardware
     private RobotHardware robot;
 
     // Color blob detector
-    private ColorBlobDetector colorDetector;
+    private ColorBlobDetectorV2 colorDetector;
 
     // Camera position and calibration parameters
     // These values should be measured for your specific robot setup
@@ -46,7 +55,7 @@ public class ColorBlobDemoV2 extends LinearOpMode {
 
         // Initialize color blob detector with camera position parameters
         // This is critical for accurate real-world measurements from the robot's center
-        colorDetector = new ColorBlobDetector(
+        colorDetector = new ColorBlobDetectorV2(
                 hardwareMap,
                 telemetry,
                 robot,
@@ -55,7 +64,16 @@ public class ColorBlobDemoV2 extends LinearOpMode {
                 CAMERA_FORWARD_OFFSET,
                 CAMERA_HORIZONTAL_OFFSET,
                 CAMERA_HORIZONTAL_FOV_DEGREES,
-                CAMERA_VERTICAL_FOV_DEGREES
+                CAMERA_VERTICAL_FOV_DEGREES,
+                fx,
+                fy,
+                cx,
+                cy,
+                k1,
+                k2,
+                p1,
+                p2,
+                k3
         );
 
         telemetry.addData("Status", "Initialized. Press play to start.");
@@ -218,7 +236,7 @@ public class ColorBlobDemoV2 extends LinearOpMode {
      */
     public boolean isSampleDetected(ColorRange color) {
         // Temporarily store the current target color
-        ColorRange currentTarget = colorDetector.getCurrentTargetColor();
+        ColorRange currentTarget = colorDetector.getCurrentColorTarget();
 
         // Set the target to the requested color
         colorDetector.setTargetColor(color);
@@ -240,7 +258,7 @@ public class ColorBlobDemoV2 extends LinearOpMode {
      */
     public boolean isSampleReachable(ColorRange color) {
         // Temporarily store the current target color
-        ColorRange currentTarget = colorDetector.getCurrentTargetColor();
+        ColorRange currentTarget = colorDetector.getCurrentColorTarget();
 
         // Set the target to the requested color
         colorDetector.setTargetColor(color);

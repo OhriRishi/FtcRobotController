@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.drive.opmode;
 
 import android.util.Size;
 
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -15,8 +17,14 @@ import org.firstinspires.ftc.vision.opencv.ImageRegion;
 import org.opencv.core.RotatedRect;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+//import org.opencv.core.Size;
 import org.opencv.core.CvType;
+import org.opencv.core.Rect;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 import org.opencv.calib3d.Calib3d;
 
 import java.util.List;
@@ -104,7 +112,7 @@ public class ColorBlobDetectorV2 {
     /**
      * Constructor with camera calibration parameters (preprocessing approach)
      */
-    public ColorBlobDetector(HardwareMap hardwareMap, Telemetry telemetry, RobotHardware robotHardware,
+    public ColorBlobDetectorV2(HardwareMap hardwareMap, Telemetry telemetry, RobotHardware robotHardware,
                              ColorRange initialColorTarget, double cameraHeightInches,
                              double cameraForwardOffset, double cameraHorizontalOffset,
                              double cameraHorizontalFovDegrees, double cameraVerticalFovDegrees,
@@ -134,7 +142,7 @@ public class ColorBlobDetectorV2 {
     /**
      * Constructor without calibration (original version)
      */
-    public ColorBlobDetector(HardwareMap hardwareMap, Telemetry telemetry, RobotHardware robotHardware,
+    public ColorBlobDetectorV2(HardwareMap hardwareMap, Telemetry telemetry, RobotHardware robotHardware,
                              ColorRange initialColorTarget, double cameraHeightInches,
                              double cameraForwardOffset, double cameraHorizontalOffset,
                              double cameraHorizontalFovDegrees, double cameraVerticalFovDegrees) {
@@ -159,7 +167,7 @@ public class ColorBlobDetectorV2 {
     /**
      * Constructor with default color target (RED)
      */
-    public ColorBlobDetector(HardwareMap hardwareMap, Telemetry telemetry, RobotHardware robotHardware,
+    public ColorBlobDetectorV2(HardwareMap hardwareMap, Telemetry telemetry, RobotHardware robotHardware,
                              double cameraHeightInches, double cameraForwardOffset, double cameraHorizontalOffset,
                              double cameraHorizontalFovDegrees, double cameraVerticalFovDegrees) {
         this(hardwareMap, telemetry, robotHardware, ColorRange.RED, cameraHeightInches,
@@ -182,7 +190,7 @@ public class ColorBlobDetectorV2 {
         distortionCoefficients.put(0, 0, k1, k2, p1, p2, k3);
 
         // Pre-compute undistortion maps for efficient real-time processing
-        Size imageSize = new Size(640, 480);
+        org.opencv.core.Size imageSize = new org.opencv.core.Size(640, 480);
         undistortMap1 = new Mat();
         undistortMap2 = new Mat();
 
@@ -244,11 +252,12 @@ public class ColorBlobDetectorV2 {
         }
 
         // Create input point matrix
-        Mat distortedPoints = new Mat(1, 1, CvType.CV_64FC2);
+        Point[] pointArray = {originalPoint};
+        MatOfPoint2f distortedPoints = new MatOfPoint2f(pointArray);
         distortedPoints.put(0, 0, originalPoint.x, originalPoint.y);
 
         // Undistort the point
-        Mat undistortedPoints = new Mat();
+        MatOfPoint2f undistortedPoints = new MatOfPoint2f();
         Calib3d.undistortPoints(distortedPoints, undistortedPoints, cameraMatrix, distortionCoefficients);
 
         // Get the undistorted point
@@ -404,7 +413,7 @@ public class ColorBlobDetectorV2 {
             double sampleWidth = divideHorizontally ? width / numSamples : width;
             double sampleHeight = divideHorizontally ? height : height / numSamples;
 
-            RotatedRect sampleBox = new RotatedRect(sampleCenter, new Size(sampleWidth, sampleHeight), angle);
+            RotatedRect sampleBox = new RotatedRect(sampleCenter, new org.opencv.core.Size(sampleWidth, sampleHeight), angle);
             double sampleArea = blob.getContourArea() / numSamples;
 
             Point[] rectPoints = new Point[4];
@@ -453,7 +462,7 @@ public class ColorBlobDetectorV2 {
 
                 RotatedRect sampleBox = new RotatedRect(
                         sampleCenter,
-                        new Size(cellWidth * 0.8, cellHeight * 0.8),
+                        new org.opencv.core.Size(cellWidth * 0.8, cellHeight * 0.8),
                         boundingRect.angle
                 );
 
@@ -518,9 +527,70 @@ public class ColorBlobDetectorV2 {
     }
 
     /**
+     * Calculate the real-world distance and angle to a regular blob from the robot's center
+     * (Overloaded method for backward compatibility with ColorBlobLocatorProcessor.Blob)
+     */
+    public double[] calculateDistanceAndAngle(ColorBlobLocatorProcessor.Blob blob) {
+        // Apply camera calibration correction to the blob center point
+        Point originalCenter = blob.getBoxFit().center;
+        Point correctedCenter = correctPoint(originalCenter);
+
+        double centerX = correctedCenter.x;
+        double centerY = correctedCenter.y;
+
+        double pixelFromCenter = centerX - 320;
+        double cameraAngleHorizontal = (pixelFromCenter / 320.0) * (cameraHorizontalFovDegrees / 2.0);
+
+        double pixelFromMiddle = 240 - centerY;
+        double cameraAngleVertical = (pixelFromMiddle / 240.0) * (cameraVerticalFovDegrees / 2.0);
+
+        double blobArea = blob.getContourArea();
+        double estimatedSizeConstant = 5000.0;
+
+        double distanceFromCamera = estimatedSizeConstant / Math.sqrt(blobArea);
+        distanceFromCamera = distanceFromCamera * Math.cos(Math.toRadians(cameraAngleVertical));
+
+        double xFromCamera = distanceFromCamera * Math.sin(Math.toRadians(cameraAngleHorizontal));
+        double yFromCamera = distanceFromCamera * Math.cos(Math.toRadians(cameraAngleHorizontal));
+        double zFromCamera = distanceFromCamera * Math.sin(Math.toRadians(cameraAngleVertical));
+
+        double xFromRobot = xFromCamera + cameraHorizontalOffset;
+        double yFromRobot = yFromCamera + cameraForwardOffset;
+        double zFromRobot = zFromCamera + cameraHeightInches;
+
+        double distanceFromRobot = Math.sqrt(xFromRobot*xFromRobot + yFromRobot*yFromRobot);
+        double angleFromRobot = Math.toDegrees(Math.atan2(xFromRobot, yFromRobot));
+
+        double orientationAngle = calculateOrientationAngle(blob);
+
+        return new double[] { distanceFromRobot, angleFromRobot, zFromRobot, orientationAngle };
+    }
+
+    /**
      * Calculate the orientation angle of a separated blob
      */
     private double calculateOrientationAngle(SeparatedBlob blob) {
+        RotatedRect rotatedRect = blob.getBoxFit();
+        double angle = rotatedRect.angle;
+        double width = rotatedRect.size.width;
+        double height = rotatedRect.size.height;
+
+        if (width < height) {
+            angle = angle - 90;
+        }
+
+        if (angle < -90) angle += 180;
+        if (angle > 90) angle -= 180;
+
+        angle = -angle;
+
+        return angle;
+    }
+
+    /**
+     * Calculate the orientation angle of a regular blob (overloaded for backward compatibility)
+     */
+    private double calculateOrientationAngle(ColorBlobLocatorProcessor.Blob blob) {
         RotatedRect rotatedRect = blob.getBoxFit();
         double angle = rotatedRect.angle;
         double width = rotatedRect.size.width;
