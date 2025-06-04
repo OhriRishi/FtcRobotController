@@ -112,7 +112,7 @@ public class ColorBlobDetectorV2 {
     /**
      * Constructor with camera calibration parameters (preprocessing approach)
      */
-    public ColorBlobDetectorV2(HardwareMap hardwareMap, Telemetry telemetry, RobotHardware robotHardware,
+    public ColorBlobDetectorV2(HardwareMap hardwareMap, Telemetry telemetry,
                              ColorRange initialColorTarget, double cameraHeightInches,
                              double cameraForwardOffset, double cameraHorizontalOffset,
                              double cameraHorizontalFovDegrees, double cameraVerticalFovDegrees,
@@ -120,7 +120,7 @@ public class ColorBlobDetectorV2 {
                              double k1, double k2, double p1, double p2, double k3) {
         this.telemetry = telemetry;
         this.hardwareMap = hardwareMap;
-        this.robotHardware = robotHardware;
+//        this.robotHardware = robotHardware;
         this.currentColorTarget = initialColorTarget;
 
         // Store camera calibration values
@@ -142,13 +142,13 @@ public class ColorBlobDetectorV2 {
     /**
      * Constructor without calibration (original version)
      */
-    public ColorBlobDetectorV2(HardwareMap hardwareMap, Telemetry telemetry, RobotHardware robotHardware,
+    public ColorBlobDetectorV2(HardwareMap hardwareMap, Telemetry telemetry,
                              ColorRange initialColorTarget, double cameraHeightInches,
                              double cameraForwardOffset, double cameraHorizontalOffset,
                              double cameraHorizontalFovDegrees, double cameraVerticalFovDegrees) {
         this.telemetry = telemetry;
         this.hardwareMap = hardwareMap;
-        this.robotHardware = robotHardware;
+       // this.robotHardware = robotHardware;
         this.currentColorTarget = initialColorTarget;
 
         // Store camera calibration values
@@ -167,10 +167,10 @@ public class ColorBlobDetectorV2 {
     /**
      * Constructor with default color target (RED)
      */
-    public ColorBlobDetectorV2(HardwareMap hardwareMap, Telemetry telemetry, RobotHardware robotHardware,
+    public ColorBlobDetectorV2(HardwareMap hardwareMap, Telemetry telemetry,
                              double cameraHeightInches, double cameraForwardOffset, double cameraHorizontalOffset,
                              double cameraHorizontalFovDegrees, double cameraVerticalFovDegrees) {
-        this(hardwareMap, telemetry, robotHardware, ColorRange.RED, cameraHeightInches,
+        this(hardwareMap, telemetry, ColorRange.RED, cameraHeightInches,
                 cameraForwardOffset, cameraHorizontalOffset, cameraHorizontalFovDegrees, cameraVerticalFovDegrees);
     }
 
@@ -523,7 +523,7 @@ public class ColorBlobDetectorV2 {
 
         double orientationAngle = calculateOrientationAngle(blob);
 
-        return new double[] { distanceFromRobot, angleFromRobot, zFromRobot, orientationAngle };
+        return new double[] { distanceFromRobot, angleFromRobot, zFromRobot, orientationAngle, xFromRobot, yFromRobot };
     }
 
     /**
@@ -563,7 +563,7 @@ public class ColorBlobDetectorV2 {
 
         double orientationAngle = calculateOrientationAngle(blob);
 
-        return new double[] { distanceFromRobot, angleFromRobot, zFromRobot, orientationAngle };
+        return new double[] { distanceFromRobot, angleFromRobot, zFromRobot, orientationAngle, yFromCamera, xFromRobot };
     }
 
     /**
@@ -746,5 +746,19 @@ public class ColorBlobDetectorV2 {
 
     public void setMaxAspectRatioSingleSample(double ratio) {
         this.maxAspectRatioSingleSample = ratio;
+    }
+    public void pauseStreaming() {
+        if (visionPortal != null) {
+            visionPortal.stopStreaming();
+        }
+    }
+
+    /**
+     * Resume camera streaming
+     */
+    public void resumeStreaming() {
+        if (visionPortal != null) {
+            visionPortal.resumeStreaming();
+        }
     }
 }

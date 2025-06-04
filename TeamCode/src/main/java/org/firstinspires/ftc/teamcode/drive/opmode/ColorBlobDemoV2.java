@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.drive.opmode;
 
+import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -18,7 +20,9 @@ import org.firstinspires.ftc.vision.opencv.ColorRange;
  * 3. How to switch between different target colors during operation
  * 4. How to use the measurements for robot guidance and navigation
  */
-@TeleOp(name = "Color Blob Demo", group = "Demo")
+@Disabled
+@Config
+@TeleOp(name = "Color Blob Demo V2", group = "Demo")
 public class ColorBlobDemoV2 extends LinearOpMode {
     public static double fx = 1430;
     public static double fy = 1430;
@@ -31,19 +35,25 @@ public class ColorBlobDemoV2 extends LinearOpMode {
     private double p2 = 0.0015228;
 
     // Robot hardware
-    private RobotHardware robot;
+    //private RobotHardware robot;
 
     // Color blob detector
     private ColorBlobDetectorV2 colorDetector;
 
     // Camera position and calibration parameters
     // These values should be measured for your specific robot setup
-    private static final double CAMERA_HEIGHT_INCHES = 6.0;  // Height of camera from ground
-    private static final double CAMERA_FORWARD_OFFSET = 4.0; // Distance forward from robot center
-    private static final double CAMERA_HORIZONTAL_OFFSET = 0.0; // Centered horizontally
-    private static final double CAMERA_HORIZONTAL_FOV_DEGREES = 60.0; // Horizontal field of view
-    private static final double CAMERA_VERTICAL_FOV_DEGREES = 45.0;   // Vertical field of view
+    private static final double CAMERA_HEIGHT_INCHES = 10.75;  // Height of camera from ground
+    public static double CAMERA_FORWARD_OFFSET = 0; // Distance forward from robot center //8
+    private static final double CAMERA_HORIZONTAL_OFFSET = -11; // Centered horizontally //-5.25
+    private static double CAMERA_HORIZONTAL_FOV_DEGREES = 25.2; // Horizontal field of view
+    private static double CAMERA_VERTICAL_FOV_DEGREES = 19.1;   // Vertical field of view
 
+    private double changeVerticalDepth(double depth){
+        return 0.129 * depth + 6.07;
+    }
+    private double changeHorizontalDepth(double depth){
+        return -0.316*depth + 1.52;
+    }
     @Override
     public void runOpMode() {
         // Initialize telemetry for user feedback
@@ -51,14 +61,14 @@ public class ColorBlobDemoV2 extends LinearOpMode {
         telemetry.update();
 
         // Initialize robot hardware
-        robot = new RobotHardware(hardwareMap);
+        //robot = new RobotHardware(hardwareMap);
 
         // Initialize color blob detector with camera position parameters
         // This is critical for accurate real-world measurements from the robot's center
         colorDetector = new ColorBlobDetectorV2(
                 hardwareMap,
                 telemetry,
-                robot,
+               // robot,
                 ColorBlobDetector.getRedTarget(), // Start with RED detection
                 CAMERA_HEIGHT_INCHES,
                 CAMERA_FORWARD_OFFSET,
@@ -106,9 +116,14 @@ public class ColorBlobDemoV2 extends LinearOpMode {
                     double angle = measurements[1];    // Angle from robot's forward direction
                     double height = measurements[2];   // Height from ground
                     double orientation = measurements[3]; // Orientation angle of the rectangle
+                    double verticalDistance = changeVerticalDepth(measurements[4]); //vertical distance from robot
+                    double horizontalDistance = changeHorizontalDepth(measurements[5]); //horizontal distance from robot
 
                     // Display detailed information about the object
                     telemetry.addLine("\n--- Largest Object Details ---");
+                    telemetry.addData("Blob area: ", largestBlob.getContourArea());
+                    telemetry.addData("Vertical distance: ", verticalDistance);
+                    telemetry.addData("Horizontal distance: ", horizontalDistance);
                     telemetry.addData("Size", String.format("%.2f sq in", largestBlob.getContourArea() / 100.0));
                     telemetry.addData("Distance from Robot", String.format("%.2f inches", distance));
                     telemetry.addData("Angle from Robot", String.format("%.2f degrees", angle));
