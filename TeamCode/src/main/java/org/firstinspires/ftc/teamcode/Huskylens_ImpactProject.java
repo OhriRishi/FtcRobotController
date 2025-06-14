@@ -72,7 +72,7 @@ public class Huskylens_ImpactProject extends LinearOpMode {
     {
         huskyLens = hardwareMap.get(HuskyLens.class, "Cam");
 
-        servo = hardwareMap.get(Servo.class, "Servo");
+        //servo = hardwareMap.get(Servo.class, "Servo");
 
         /*
          * This sample rate limits the reads solely to allow a user time to observe
@@ -115,11 +115,9 @@ public class Huskylens_ImpactProject extends LinearOpMode {
          *
          * Other algorithm choices for FTC might be: OBJECT_RECOGNITION, COLOR_RECOGNITION or OBJECT_CLASSIFICATION.
          */
-        huskyLens.selectAlgorithm(HuskyLens.Algorithm.OBJECT_TRACKING);
+        huskyLens.selectAlgorithm(HuskyLens.Algorithm.OBJECT_CLASSIFICATION);
 
         telemetry.update();
-
-        servo.setPosition(0);
 
         waitForStart();
 
@@ -149,21 +147,15 @@ public class Huskylens_ImpactProject extends LinearOpMode {
             for (int i = 0; i < blocks.length; i++) {
                 telemetry.addData("Block", blocks[i].toString());
 
-                if (blocks.length > 0){
-                    if (blocks[i].x < 160){
-
-                        sleep(1000);
-
-                        servo.setPosition(0);
-
-                    }else{
-
-                        sleep(1000);
-
-                        servo.setPosition(1);
-                    }
+                if(blocks[i].id == 1){
+                    telemetry.addData("Disposal Method", "Recycle");
                 }
-
+                if(blocks[i].id == 2){
+                    telemetry.addData("Disposal Method", "Trash");
+                }
+                if(blocks[i].id == 3){
+                    telemetry.addData("Disposal Method", "Compost");
+                }
                 /*
                  * Here inside the FOR loop, you could save or evaluate specific info for the currently recognized Bounding Box:
                  * - blocks[i].width and blocks[i].height   (size of box, in pixels)
