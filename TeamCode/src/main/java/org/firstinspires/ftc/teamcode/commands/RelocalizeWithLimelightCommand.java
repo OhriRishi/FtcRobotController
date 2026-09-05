@@ -50,6 +50,7 @@ public class RelocalizeWithLimelightCommand extends CommandBase {
 
     @Override
     public void execute() {
+        limelight.updateUsingMT2(odometry.getPose().getHeading()); // print the heading here too
         if(!ENABLE_RELOCALIZATION)
             return;
 

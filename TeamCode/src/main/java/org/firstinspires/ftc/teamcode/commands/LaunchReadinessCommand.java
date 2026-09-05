@@ -258,6 +258,7 @@ public class LaunchReadinessCommand extends CommandBase {
                 // Get the horizontal offset of the target from Limelight (tx)
                 // Assuming your LimelightSubsystem has getHorizontalOffset() which returns degrees
                 Pose limelightRobotPose = limelightSubsystem.getLatestFieldPose();
+                limelightSubsystem.updateUsingMT2(odometry.getPose().getHeading()); // print the robo position
 
                 if (limelightRobotPose != null){
 
@@ -378,7 +379,7 @@ public class LaunchReadinessCommand extends CommandBase {
         launchSubsystem.setTurretPosition(solution.turretServoPosition);
         launchSubsystem.setFlywheelPID(current.P, current.I, current.D);
         launchSubsystem.updateFeedforward(current.kS, current.kV);
-        launchSubsystem.updateFlywheel(current.targetRPM);
+//        launchSubsystem.updateFlywheel(current.targetRPM);
         launchSubsystem.setVisorPosition(solution.visorPosition);
         launchSubsystem.setShotSolutionReady(solution.shotSolutionReady);
     }

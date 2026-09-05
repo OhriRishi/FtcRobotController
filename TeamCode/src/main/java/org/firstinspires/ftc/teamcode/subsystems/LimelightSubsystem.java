@@ -85,6 +85,43 @@ public class LimelightSubsystem extends SubsystemBase {
         return null;
     }
 
+    /**
+     * Returns the robot's pose on the field based on AprilTags.
+     * Returns null if no tags are in view.
+     * @param currentHeading requires the robot current heading as required in da docs
+     */
+    public void updateUsingMT2(double currentHeading) {
+        currentHeading = Math.toDegrees(currentHeading);
+        LLResult result = limelight.getLatestResult();
+        limelight.updateRobotOrientation(currentHeading);
+
+        if (result != null && result.isValid()) {
+            // We only care about Fiducials (AprilTags) for pose estimation
+            List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+
+            boolean targetSeen = false;
+            for (LLResultTypes.FiducialResult f : fiducials) {
+                if (f.getFiducialId() == targetTagId) {
+                    Log.i("Limelight subsystem", "found FiducialResult");
+                    targetSeen = true;
+                    break;
+                }
+            }
+
+            if (targetSeen) {
+                Pose3D botpose_mt2 = result.getBotpose_MT2();
+                if (botpose_mt2 != null) {
+                    double x = botpose_mt2.getPosition().toUnit(DistanceUnit.INCH).x;
+                    double y = botpose_mt2.getPosition().toUnit(DistanceUnit.INCH).y;
+                    telemetry.addData("MT2 Location:", "(" + x + ", " + y + "," + currentHeading + ")"); // get the pose from mega tag 2
+
+                    Log.i("MT2 Location: ", "(" + x + ", " + y + "," + currentHeading + ")");
+                }
+            }
+        }
+        Log.i("MT2 Location: ", "No Location found");
+    }
+
     public void setPipeline(int index) {
         limelight.pipelineSwitch(index);
     }

@@ -131,7 +131,7 @@ public class Incredibot extends Robot {
         launchKickSubsystem.setDefaultCommand(new ResetKickCommand(launchKickSubsystem));
 
         // It will start at match start and manage itself based on sensor data
-        intakeSubsystem.setDefaultCommand(new SmartIntakeCommand(intakeSubsystem, launchGateSubsystem, launchKickSubsystem, odometrySubsystem));
+//        intakeSubsystem.setDefaultCommand(new SmartIntakeCommand(intakeSubsystem, launchGateSubsystem, launchKickSubsystem, odometrySubsystem));
 
         // Assign the background tracking loop here!
         // The scheduler will now call execute() on this command every single frame.
