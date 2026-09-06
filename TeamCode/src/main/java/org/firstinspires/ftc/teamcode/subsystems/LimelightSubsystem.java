@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import android.util.Log;
 
 import com.arcrobotics.ftclib.command.SubsystemBase;
+import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
@@ -17,8 +18,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
 import java.util.List;
-
+@Configurable
 public class LimelightSubsystem extends SubsystemBase {
+    public static double HEADING_OFFSET = 90;
     private final Limelight3A limelight;
     private final TelemetryManager telemetry;
 
@@ -91,9 +93,12 @@ public class LimelightSubsystem extends SubsystemBase {
      * @param currentHeading requires the robot current heading as required in da docs
      */
     public void updateUsingMT2(double currentHeading) {
+        Log.i("MT2 location: ", "before turning heading to deg: " + currentHeading);
         currentHeading = Math.toDegrees(currentHeading);
-        LLResult result = limelight.getLatestResult();
+        Log.i("MT2 location ", "before adding 90: " + currentHeading);
+        currentHeading += HEADING_OFFSET; // to add the 90 degree offset
         limelight.updateRobotOrientation(currentHeading);
+        LLResult result = limelight.getLatestResult();
 
         if (result != null && result.isValid()) {
             // We only care about Fiducials (AprilTags) for pose estimation
@@ -110,6 +115,7 @@ public class LimelightSubsystem extends SubsystemBase {
 
             if (targetSeen) {
                 Pose3D botpose_mt2 = result.getBotpose_MT2();
+                result.getStddevMt2();
                 if (botpose_mt2 != null) {
                     double x = botpose_mt2.getPosition().toUnit(DistanceUnit.INCH).x;
                     double y = botpose_mt2.getPosition().toUnit(DistanceUnit.INCH).y;

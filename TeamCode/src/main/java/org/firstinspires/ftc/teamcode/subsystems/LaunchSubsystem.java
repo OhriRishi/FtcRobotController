@@ -64,7 +64,7 @@ public class LaunchSubsystem extends SubsystemBase {
     private SimpleMotorFeedforward flywheelFF = new SimpleMotorFeedforward(0.1, 0.00058); //45
 
     // Inside LaunchSubsystem.java
-    private boolean isLaunchReadinessLocked = false;
+    private boolean isLaunchReadinessLocked = false; // set it to true by defualt
 
     public static boolean SKIP_FLYWHEEL = false;
 

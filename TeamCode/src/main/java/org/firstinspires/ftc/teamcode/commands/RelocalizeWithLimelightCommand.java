@@ -32,7 +32,7 @@ public class RelocalizeWithLimelightCommand extends CommandBase {
 
     public static double STD_DEV_THRESHOLD = 1.5;
 
-    public static boolean ENABLE_RELOCALIZATION = false;
+    public static boolean ENABLE_RELOCALIZATION = true;
 
     public RelocalizeWithLimelightCommand(LimelightSubsystem limelight,
                                           OdometrySubsystem odometry,
